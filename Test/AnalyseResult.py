@@ -20,10 +20,12 @@ REMOTE_FILE_PATH = '/WordCrawler'
 #分析结果文件
 ANALYSE_FILE_PATH = '../Result/analyse_result.txt'
 
+
 class ImeInfo:
     VersionName = ""
     VersionCode = ""
     PackageName = ""
+
 
 class report:
     imeInfo = ImeInfo()
@@ -39,15 +41,15 @@ class report:
     isCorrect = False
 
     def downloadFile(self):
-        if(os.path.isfile(LOCAL_RESULT_FILE) and os.path.exists(LOCAL_RESULT_FILE)):
+        if (os.path.isfile(LOCAL_RESULT_FILE) and os.path.exists(LOCAL_RESULT_FILE)):
             os.remove(LOCAL_RESULT_FILE)
         try:
             f = ftplib.FTP(FTP_HOST)
-        except (socket.error,socket.gaierror),e:
+        except (socket.error, socket.gaierror), e:
             return False
 
         try:
-            f.login(user=FTP_USER_NAME,passwd=FTP_PASSWD)
+            f.login(user=FTP_USER_NAME, passwd=FTP_PASSWD)
         except ftplib.error_perm:
             print 'FTP login failed!\r\n'
             f.quit()
@@ -57,7 +59,7 @@ class report:
         try:
             dir_list = []
             f.dir(dir_list.append)
-            f.retrbinary('RETR %s' % self.getLatestFileOnFtp(f), open(LOCAL_RESULT_FILE,'wb').write)
+            f.retrbinary('RETR %s' % self.getLatestFileOnFtp(f), open(LOCAL_RESULT_FILE, 'wb').write)
         except ftplib.error_perm:
             print 'Cannot read remote file!\r\n'
             os.unlink(REMOTE_FILE_PATH)
@@ -80,7 +82,7 @@ class report:
         return files[files.__len__() - 1]
 
     def record(self, oneResult):
-        if oneResult == '' or oneResult == None:
+        if oneResult == '' or oneResult is None:
             return
 
         self.totalCount += 1
@@ -101,7 +103,7 @@ class report:
         oneResult = ''
         resultFile = open(LOCAL_RESULT_FILE, 'r')
         for line in resultFile:
-            line  = line.decode('UTF-8')
+            line = line.decode('UTF-8')
             if line.startswith('wordstart'):
                 oneResult = ''
             elif line.startswith('wordend'):
@@ -114,11 +116,11 @@ class report:
         for i in range(0, 3):
             line = resultFile.readline()
             if line.startswith('IMEName'):
-                self.imeInfo.PackageName = line[line.index(':') + 1 :]
+                self.imeInfo.PackageName = line[line.index(':') + 1:]
             elif line.startswith('IMEVersionName'):
-                self.imeInfo.VersionName = line[line.index(':') + 1 :]
+                self.imeInfo.VersionName = line[line.index(':') + 1:]
             elif line.startswith('IMEVersionCode'):
-                self.imeInfo.VersionCode = line[line.index(':') + 1 :]
+                self.imeInfo.VersionCode = line[line.index(':') + 1:]
 
         return
 
@@ -131,16 +133,12 @@ class report:
 
     def writeAnalyseResult(self):
         analyseFile = open(ANALYSE_FILE_PATH, 'w')
-        target = []
-        target.append('case总数: ' + str(self.totalCount) + '\n')
-        target.append('首选命中数： ' + str(self.firstHitCount) + '\n')
-        target.append('首选命中率： ' + str((self.firstHitCount*1.000)/self.totalCount) + '\n')
-        target.append('首屏命中数： ' + str(self.totalCount - self.missCount) + '\n')
-        target.append('首屏命中率： ' + str(((self.totalCount - self.missCount)*1.000)/self.totalCount) + '\n')
-        target.append('输入法名称: ' + self.imeInfo.PackageName)
-        target.append('输入法Version Name： ' + self.imeInfo.VersionName)
-        target.append('输入法Version Code： ' + self.imeInfo.VersionCode)
-        target.append('Log文件校验结果: ' + '正确' if self.isCorrect else '错误')
+        target = ['case总数: ' + str(self.totalCount) + '\n', '首选命中数： ' + str(self.firstHitCount) + '\n',
+                  '首选命中率： ' + str((self.firstHitCount * 1.000) / self.totalCount) + '\n',
+                  '首屏命中数： ' + str(self.totalCount - self.missCount) + '\n',
+                  '首屏命中率： ' + str(((self.totalCount - self.missCount) * 1.000) / self.totalCount) + '\n',
+                  '输入法名称: ' + self.imeInfo.PackageName, '输入法Version Name： ' + self.imeInfo.VersionName,
+                  '输入法Version Code： ' + self.imeInfo.VersionCode, 'Log文件校验结果: ' + '正确' if self.isCorrect else '错误']
         #target = target.encode("UTF-8")
         analyseFile.writelines(target)
         return
@@ -156,7 +154,6 @@ class report:
         self.writeAnalyseResult()
 
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
     reporter = report()
     reporter.main()
