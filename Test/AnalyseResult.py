@@ -33,9 +33,10 @@ class ImeInfo:
 
 class report:
     imeInfo = ImeInfo()
-    mRawConfig = None
-    #总个数
-    mTotalCount = 0
+    #总输入Case个数
+    mTotalInputCount = 0
+    #总运行Case个数
+    mTotalRanCount = 0
     #权重总和
     mTotalWeight = 0
     #首选命中个数
@@ -52,9 +53,11 @@ class report:
     mHitNotFirstWeight = 0
     #Log校验结果
     mIsCorrect = False
+    #raw.config文件全部内容
+    mRawConfigLines = ['']
 
     def downloadFile(self):
-        if (os.path.isfile(LOCAL_RESULT_FILE) and os.path.exists(LOCAL_RESULT_FILE)):
+        if os.path.isfile(LOCAL_RESULT_FILE) and os.path.exists(LOCAL_RESULT_FILE):
             os.remove(LOCAL_RESULT_FILE)
         try:
             f = ftplib.FTP(FTP_HOST)
@@ -96,11 +99,11 @@ class report:
     def record(self, oneResult):
         if oneResult == '' or oneResult is None:
             return
-        self.mTotalCount += 1
+        self.mTotalRanCount += 1
         lines = oneResult.split('\n')
         weightStr = "error"
         try:
-            weightStr = self.getCaseWeight(self.mRawConfig, lines[0][7:])
+            weightStr = self.getCaseWeight(self.mTotalRanCount, lines[0][7:])
             weight = int(weightStr)
         except ValueError:
             print weightStr + ", error in convert weight!"
@@ -127,7 +130,6 @@ class report:
         oneResult = ''
         resultFile = open(LOCAL_RESULT_FILE, 'r')
         for line in resultFile:
-            line = line.decode('UTF-8')
             if line.__contains__('wordstart'):
                 oneResult = ''
             elif line.__contains__('wordend'):
@@ -148,21 +150,26 @@ class report:
 
         return
 
-    def getCaseWeight(self, rawConfig, inputStr):
+    def getCaseWeight(self, curCount, inputStr):
+        #下标和个数不一样，换算一下
+        index = curCount - 1
         line = ""
-        line = rawConfig.readline()
         pinyin = inputStr[:inputStr.index('\t')]
-        pinyin = pinyin.encode()
+        hanzi = inputStr[inputStr.index('\t') + 1:]
+        #找到指定Case的权重值
+        while not self.mRawConfigLines[index].__contains__(hanzi + ',' + pinyin):
+            index +=1
+        line = self.mRawConfigLines[index]
         if line.find(pinyin) != -1:
             lines = line.split(',')
             weights = lines[lines.__len__() - 1].split("\"")
             return weights[weights.__len__() - 2]
         else:
-            print inputStr + ', error in reading weight!'
+            print inputStr + ', 没有读取到权重值！'
             return "0"
 
     def checkLog(self):
-        if self.mTotalCount == self.mFirstHitCount + self.mHitNotFirstCount + self.mMissCount:
+        if self.mTotalRanCount == self.mFirstHitCount + self.mHitNotFirstCount + self.mMissCount:
             print '个数校验成功！'
             if self.mTotalWeight == self.mFirstHitWeight + self.mHitNotFirstWeight + self.mMissWeight:
                 print '权重校验成功！'
@@ -171,33 +178,30 @@ class report:
             return False
 
     def writeAnalyseResult(self):
+        self.mTotalInputCount = self.mRawConfigLines.__len__()
         analyseFile = open(ANALYSE_FILE_PATH, 'w')
-        target = ['case总数: ' + str(self.mTotalCount) + '\n',
+        target = ['输入case总数: ' + str(self.mTotalInputCount) + '\n',
+                  '运行case总数: ' + str(self.mTotalRanCount) + '\n',
                   '首选命中数： ' + str(self.mFirstHitCount) + '\n',
                   '首选命中率(带权重): ' + str((self.mFirstHitWeight * 1.000) / self.mTotalWeight) + '\n',
-                  '首选命中率： ' + str((self.mFirstHitCount * 1.000) / self.mTotalCount) + '\n',
-                  '首屏命中数： ' + str(self.mTotalCount - self.mMissCount) + '\n',
+                  '首选命中率： ' + str((self.mFirstHitCount * 1.000) / self.mTotalRanCount) + '\n',
+                  '首屏命中数： ' + str(self.mTotalRanCount - self.mMissCount) + '\n',
                   '首屏命中率(带权重): ' + str(((self.mHitNotFirstWeight + self.mFirstHitWeight) * 1.000) / self.mTotalWeight) + '\n',
-                  '首屏命中率： ' + str(((self.mTotalCount - self.mMissCount) * 1.000) / self.mTotalCount) + '\n',
+                  '首屏命中率： ' + str(((self.mTotalRanCount - self.mMissCount) * 1.000) / self.mTotalRanCount) + '\n',
                   '输入法名称: ' + self.imeInfo.PackageName + '\n',
                   '输入法Version Name： ' + self.imeInfo.VersionName + '\n',
                   '输入法Version Code： ' + self.imeInfo.VersionCode + '\n',
                   'Log文件校验结果: ' + ('正确' if self.mIsCorrect else '错误')]
-        #target = target.encode("UTF-8")
         analyseFile.writelines(target)
         return
 
-
     def main(self):
         if self.downloadFile():
-            self.mRawConfig = open(LOCAL_CONFIG_FILE, 'r')
+            self.mRawConfigLines = open(LOCAL_CONFIG_FILE, 'r').readlines()
             self.getImeInfo()
             self.analyse()
-
         self.mIsCorrect = self.checkLog()
-
         self.writeAnalyseResult()
-
 
 if __name__ == '__main__':
     reporter = report()
