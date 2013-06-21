@@ -55,6 +55,8 @@ class report:
     mIsCorrect = False
     #raw.config文件全部内容
     mRawConfigLines = ['']
+    #没有运行的Case记录
+    mMissedRunCase = ''
 
     def downloadFile(self):
         if os.path.isfile(LOCAL_RESULT_FILE) and os.path.exists(LOCAL_RESULT_FILE):
@@ -159,13 +161,14 @@ class report:
         #找到指定Case的权重值
         while not self.mRawConfigLines[index].__contains__(hanzi + ',' + pinyin):
             index +=1
+
         line = self.mRawConfigLines[index]
         if line.find(pinyin) != -1:
             lines = line.split(',')
             weights = lines[lines.__len__() - 1].split("\"")
             return weights[weights.__len__() - 2]
         else:
-            print inputStr + ', 没有读取到权重值！'
+            print inputStr + ', 没有读取到正确的权重值！'
             return "0"
 
     def checkLog(self):
@@ -191,17 +194,44 @@ class report:
                   '输入法名称: ' + self.imeInfo.PackageName + '\n',
                   '输入法Version Name： ' + self.imeInfo.VersionName + '\n',
                   '输入法Version Code： ' + self.imeInfo.VersionCode + '\n',
-                  'Log文件校验结果: ' + ('正确' if self.mIsCorrect else '错误')]
+                  'Log文件校验结果: ' + ('正确' if self.mIsCorrect else '错误') + '\n',
+                  '没有运行的Case: ' + '\n' + self.mMissedRunCase]
         analyseFile.writelines(target)
         return
+
+    def checkMissedRunCase(self):
+        checkResult = ''
+        missedRunCount = 0
+        indexOfRanCase = 0
+        resultFile = open(LOCAL_RESULT_FILE, 'r')
+        ranCaseList = []
+        for line in resultFile:
+            line.decode('UTF-8')
+            if line.__contains__('pinyin:'):
+                ranCaseList.append(line.split(':')[1])
+        for case in self.mRawConfigLines:
+            oneRanCase = ranCaseList[indexOfRanCase]
+            oneInputCase = case.split('\"')[1].split(',')
+            inputPinyin = oneInputCase[1]
+            inputHanzi = oneInputCase[0]
+            if oneRanCase.__contains__(inputPinyin + '\t' + inputHanzi):
+                indexOfRanCase += 1
+            else:
+                missedRunCount += 1
+                checkResult += '没有运行：' + case
+        if missedRunCount != 0:
+            checkResult += '有' + str(missedRunCount) + '个case没有运行！'
+        return checkResult
 
     def main(self):
         if self.downloadFile():
             self.mRawConfigLines = open(LOCAL_CONFIG_FILE, 'r').readlines()
             self.getImeInfo()
             self.analyse()
+            self.mMissedRunCase = self.checkMissedRunCase()
         self.mIsCorrect = self.checkLog()
         self.writeAnalyseResult()
+
 
 if __name__ == '__main__':
     reporter = report()
