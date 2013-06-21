@@ -116,10 +116,10 @@ class report:
 
         for line in lines:
             if line.__contains__('target'):
-                if line.__contains__('target:-1'):
+                if line.__contains__('target:1'):
                     self.mFirstHitCount += 1
                     self.mFirstHitWeight += weight
-                elif line.__contains__('target:0'):
+                elif line.__contains__('target:-1'):
                     self.mMissCount += 1
                     self.mMissWeight += weight
                 else:
