@@ -116,7 +116,7 @@ class report:
 
         for line in lines:
             if line.__contains__('target'):
-                if line.__contains__('target:1'):
+                if line.__contains__('target:-1'):
                     self.mFirstHitCount += 1
                     self.mFirstHitWeight += weight
                 elif line.__contains__('target:0'):
@@ -132,6 +132,7 @@ class report:
         oneResult = ''
         resultFile = open(LOCAL_RESULT_FILE, 'r')
         for line in resultFile:
+            line.decode('UTF-8')
             if line.__contains__('wordstart'):
                 oneResult = ''
             elif line.__contains__('wordend'):
@@ -159,11 +160,17 @@ class report:
         pinyin = inputStr[:inputStr.index('\t')]
         hanzi = inputStr[inputStr.index('\t') + 1:]
         #找到指定Case的权重值
-        while not self.mRawConfigLines[index].__contains__(hanzi + ',' + pinyin):
-            index +=1
-
-        line = self.mRawConfigLines[index]
-        if line.find(pinyin) != -1:
+        for i in range(index, self.mRawConfigLines.__len__()):
+            oneInputCase = self.mRawConfigLines[i]
+            if oneInputCase.__contains__(hanzi + ',' + pinyin):
+                index  = i
+                break
+        try:
+            line = self.mRawConfigLines[index]
+        except IndexError:
+            print 'index: ' + str(index) + ', curCount: ' + str(curCount)
+            raise
+        if line.__contains__(hanzi + ',' + pinyin):
             lines = line.split(',')
             weights = lines[lines.__len__() - 1].split("\"")
             return weights[weights.__len__() - 2]
@@ -194,7 +201,7 @@ class report:
                   '输入法名称: ' + self.imeInfo.PackageName + '\n',
                   '输入法Version Name： ' + self.imeInfo.VersionName + '\n',
                   '输入法Version Code： ' + self.imeInfo.VersionCode + '\n',
-                  'Log文件校验结果: ' + ('正确' if self.mIsCorrect else '错误') + '\n',
+                  'Log文件校验结果: ' + ('权重值校验正确, case个数校验正确！' if self.mIsCorrect else '错误') + '\n',
                   '没有运行的Case: ' + '\n' + self.mMissedRunCase]
         analyseFile.writelines(target)
         return
