@@ -236,8 +236,8 @@ class report:
             self.getImeInfo()
             self.analyse()
             self.mMissedRunCase = self.checkMissedRunCase()
-        self.mIsCorrect = self.checkLog()
-        self.writeAnalyseResult()
+            self.mIsCorrect = self.checkLog()
+            self.writeAnalyseResult()
 
 
 if __name__ == '__main__':
