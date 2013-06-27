@@ -124,17 +124,20 @@ class report:
                 elif line.__contains__('target:-1'):
                     self.mMissCount += 1
                     self.mMissWeight += weight
-                    self.mNotFirstCase += "第" + str(self.mTotalRanCount) + "个运行的Case:\n" + oneResult + "==============\n"
+                    self.mNotFirstCase += "第" + str(self.mTotalRanCount) + "个运行的Case:\n" +\
+                                         "===wordstart===\n" + oneResult + "===wordend===\n"
                 else:
                     self.mHitNotFirstCount += 1
                     self.mHitNotFirstWeight += weight
-                    self.mNotFirstCase += "第" + str(self.mTotalRanCount) + "个运行的Case:\n" + oneResult + "==============\n"
+                    self.mNotFirstCase += "第" + str(self.mTotalRanCount) + "个运行的Case:\n" +\
+                                         "===wordstart===\n" + oneResult + "===wordend===\n"
 
         return
 
     def analyse(self):
         oneResult = ''
         resultFile = open(LOCAL_RESULT_FILE, 'r')
+        self.mNotFirstCase = "==============\n"
         for line in resultFile:
             line.decode('UTF-8')
             if line.__contains__('wordstart'):
