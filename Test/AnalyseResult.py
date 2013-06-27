@@ -57,6 +57,8 @@ class report:
     mRawConfigLines = ['']
     #没有运行的Case记录
     mMissedRunCase = ''
+    #没有在首位的case
+    mNotFirstCase = ''
 
     def downloadFile(self):
         if os.path.isfile(LOCAL_RESULT_FILE) and os.path.exists(LOCAL_RESULT_FILE):
@@ -115,16 +117,18 @@ class report:
         self.mTotalWeight += weight
 
         for line in lines:
-            if line.__contains__('target'):
+            if line.__contains__('target:'):
                 if line.__contains__('target:1'):
                     self.mFirstHitCount += 1
                     self.mFirstHitWeight += weight
                 elif line.__contains__('target:-1'):
                     self.mMissCount += 1
                     self.mMissWeight += weight
+                    self.mNotFirstCase += "第" + str(self.mTotalRanCount) + "个运行的Case:\n" + oneResult + "==============\n"
                 else:
                     self.mHitNotFirstCount += 1
                     self.mHitNotFirstWeight += weight
+                    self.mNotFirstCase += "第" + str(self.mTotalRanCount) + "个运行的Case:\n" + oneResult + "==============\n"
 
         return
 
@@ -190,19 +194,26 @@ class report:
     def writeAnalyseResult(self):
         self.mTotalInputCount = self.mRawConfigLines.__len__()
         analyseFile = open(ANALYSE_FILE_PATH, 'w')
-        target = ['输入case总数: ' + str(self.mTotalInputCount) + '\n',
-                  '运行case总数: ' + str(self.mTotalRanCount) + '\n',
-                  '首选命中数： ' + str(self.mFirstHitCount) + '\n',
-                  '首选命中率(带权重): ' + str((self.mFirstHitWeight * 1.000) / self.mTotalWeight) + '\n',
-                  '首选命中率： ' + str((self.mFirstHitCount * 1.000) / self.mTotalRanCount) + '\n',
-                  '首屏命中数： ' + str(self.mTotalRanCount - self.mMissCount) + '\n',
-                  '首屏命中率(带权重): ' + str(((self.mHitNotFirstWeight + self.mFirstHitWeight) * 1.000) / self.mTotalWeight) + '\n',
-                  '首屏命中率： ' + str(((self.mTotalRanCount - self.mMissCount) * 1.000) / self.mTotalRanCount) + '\n',
-                  '输入法名称: ' + self.imeInfo.PackageName + '\n',
-                  '输入法Version Name： ' + self.imeInfo.VersionName + '\n',
-                  '输入法Version Code： ' + self.imeInfo.VersionCode + '\n',
-                  'Log文件校验结果: ' + ('权重值校验正确, case个数校验正确！' if self.mIsCorrect else '错误') + '\n',
-                  '没有运行的Case: ' + '\n' + self.mMissedRunCase]
+        target = ['1. 输入case总数:  ' + str(self.mTotalInputCount) + '\n',
+                  '2. 运行case总数:  ' + str(self.mTotalRanCount) + '\n',
+                  '3. 首选:  ' + '\n',
+                  '\t3.1 首选命中总权重:  ' + str(self.mFirstHitWeight) + '\n' ,
+                  '\t3.2 首选命中数:  ' + str(self.mFirstHitCount) + '\n',
+                  '\t3.3 首选命中率(带权重):  ' + str((self.mFirstHitWeight * 1.000) / self.mTotalWeight) + '\n',
+                  '\t3.4 首选命中率:  ' + str((self.mFirstHitCount * 1.000) / self.mTotalRanCount) + '\n',
+                  '4. 首屏:  ' + '\n',
+                  '\t4.1 首屏命中总权重:  ' + str((self.mHitNotFirstWeight + self.mFirstHitWeight)) + '\n',
+                  '\t4.2 首屏命中数:  ' + str(self.mTotalRanCount - self.mMissCount) + '\n',
+                  '\t4.3 首屏命中率(带权重):  ' + str(((self.mHitNotFirstWeight + self.mFirstHitWeight) * 1.000) / self.mTotalWeight) + '\n',
+                  '\t4.4 首屏命中率:  ' + str(((self.mTotalRanCount - self.mMissCount) * 1.000) / self.mTotalRanCount) + '\n',
+                  '5. 输入法信息:  ' + '\n',
+                  '\t5.1 输入法名称:  ' + self.imeInfo.PackageName + '\n',
+                  '\t5.2 输入法Version Name:  ' + self.imeInfo.VersionName + '\n',
+                  '\t5.3 输入法Version Code:  ' + self.imeInfo.VersionCode + '\n',
+                  '6. 结果校验:  ' + '\n',
+                  '\t6.1 Log文件校验结果:  ' + ('权重值校验正确, case个数校验正确！' if self.mIsCorrect else '错误') + '\n',
+                  '\t6.2 没有运行的Case:  ' + '\n\t' + self.mMissedRunCase + '\n',
+                  '\t6.3 没有在首位的case:  ' + '\n\n' + self.mNotFirstCase + '\n']
         analyseFile.writelines(target)
         return
 
