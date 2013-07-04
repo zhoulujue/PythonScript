@@ -215,7 +215,7 @@ class report:
                   '\t5.3 输入法Version Code:  ' + self.imeInfo.VersionCode + '\n',
                   '6. 结果校验:  ' + '\n',
                   '\t6.1 Log文件校验结果:  ' + ('权重值校验正确, case个数校验正确！' if self.mIsCorrect else '错误') + '\n',
-                  '\t6.2 没有运行的Case:  ' + '\n\t' + self.mMissedRunCase + '\n',
+                  '\t6.2 没有运行的Case:  ' + '\n\n' + self.mMissedRunCase + '\n',
                   '\t6.3 没有在首位的case:  ' + '\n\n' + self.mNotFirstCase + '\n']
         analyseFile.writelines(target)
         return
@@ -223,21 +223,16 @@ class report:
     def checkMissedRunCase(self):
         checkResult = ''
         missedRunCount = 0
-        indexOfRanCase = 0
         resultFile = open(LOCAL_RESULT_FILE, 'r')
         ranCaseList = []
         for line in resultFile:
-            line.decode('UTF-8')
+            #line.decode('UTF-8')
             if line.__contains__('pinyin:'):
                 ranCaseList.append(line.split(':')[1])
         for case in self.mRawConfigLines:
-            oneRanCase = ranCaseList[indexOfRanCase]
             oneInputCase = case.split('\"')[1].split(',')
-            inputPinyin = oneInputCase[1]
-            inputHanzi = oneInputCase[0]
-            if oneRanCase.__contains__(inputPinyin + '\t' + inputHanzi):
-                indexOfRanCase += 1
-            else:
+            targetInputCase = oneInputCase[1] + '\t' + oneInputCase[0] + '\n'
+            if not targetInputCase in ranCaseList:
                 missedRunCount += 1
                 checkResult += '没有运行：' + case
         if missedRunCount != 0:
