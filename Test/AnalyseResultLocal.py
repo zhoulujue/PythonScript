@@ -195,7 +195,9 @@ class report:
             return False
 
     def writeAnalyseResult(self):
-        self.mTotalInputCount = self.mRawConfigLines.__len__()
+        for i in range(0, self.mRawConfigLines.__len__()):
+            if not self.mRawConfigLines[i].__contains__(',#'):
+                self.mTotalInputCount += 1
         analyseFile = open(ANALYSE_FILE_PATH, 'w')
         target = ['1. 输入case总数:  ' + str(self.mTotalInputCount) + '\n',
                   '2. 运行case总数:  ' + str(self.mTotalRanCount) + '\n',
