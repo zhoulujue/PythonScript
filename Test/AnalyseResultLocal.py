@@ -235,8 +235,9 @@ class report:
             oneInputCase = case.split('\"')[1].split(',')
             targetInputCase = oneInputCase[1] + '\t' + oneInputCase[0] + '\n'
             if not targetInputCase in ranCaseList:
-                missedRunCount += 1
-                checkResult += '没有运行：' + case
+                if not targetInputCase.__contains__('#'):
+                    missedRunCount += 1
+                    checkResult += '没有运行：' + case
         if missedRunCount != 0:
             checkResult += '有' + str(missedRunCount) + '个case没有运行！'
         return checkResult
